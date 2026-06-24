@@ -352,10 +352,9 @@ export default function App() {
 
   const personRole = name => PERSONNEL.find(p=>p.name===name)?.role||''
 
-  // ── SHARED FORM BODY ──
-  const RForm = () => (
+  // ── FORM FIELDS rendered inline (not as inner components) ──
+  const rFormFields = (
     <>
-      {/* Record class selector */}
       <div className="fg">
         <label>Category <span className="req">*</span></label>
         <div className="rclass-row">
@@ -372,7 +371,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Parent assembly — only for Part */}
       {isPart && (
         <div className="fg">
           <label>Parent Assembly / Assemblies <span className="req">*</span></label>
@@ -460,7 +458,7 @@ export default function App() {
     </>
   )
 
-  const VForm = () => (
+  const vFormFields = (
     <>
       <div className="fg">
         <label>Description <span className="req">*</span></label>
@@ -628,7 +626,7 @@ export default function App() {
         >
           <div className="form-bod">
             {!editTarget && <div className="preview-num">{previewNum}</div>}
-            <RForm />
+            {rFormFields}
           </div>
           <div className="modal-ftr">
             <button className="btn-ghost" onClick={()=>{setShowForm(null);setEditTarget(null)}}>Cancel</button>
@@ -648,7 +646,7 @@ export default function App() {
         >
           <div className="form-bod">
             {!editTarget && <div className="preview-num vnum">{previewNum}</div>}
-            <VForm />
+            {vFormFields}
           </div>
           <div className="modal-ftr">
             <button className="btn-ghost" onClick={()=>{setShowForm(null);setEditTarget(null)}}>Cancel</button>
