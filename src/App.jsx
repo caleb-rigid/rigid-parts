@@ -62,6 +62,30 @@ function matPreview(f){
 }
 function personRole(name){return PERSONNEL.find(p=>p.name===name)?.role||''}
 
+// Parse a saved material string back into picker fields for editing
+function parseMaterial(str){
+  if(!str) return {matCat:'',matSize:'',matSub1:'',matSub2:''}
+  // Plate: "PL1/2" A36" or "Plate A36"
+  const plateM=str.match(/^PL([^ ]+) (.+)$/)
+  if(plateM) return {matCat:'Plate',matSize:'',matSub1:plateM[2],matSub2:plateM[1]}
+  if(str.startsWith('Plate ')) return {matCat:'Plate',matSize:'',matSub1:str.replace('Plate ',''),matSub2:''}
+  // Sheet: "18ga HR Steel" or "3/16" 304 Stainless"
+  const sheetGA=['26ga','24ga','22ga','20ga','18ga','16ga','14ga','12ga','11ga','10ga','7ga','3/16"']
+  const sheetMats=['HR Steel','CR Steel','304 Stainless','316 Stainless','6061-T6 Aluminum','5052 Aluminum']
+  for(const ga of sheetGA){
+    if(str.startsWith(ga+' ')){
+      const mat=str.replace(ga+' ','')
+      if(sheetMats.includes(mat)) return {matCat:'Sheet Metal',matSize:'',matSub1:mat,matSub2:ga}
+    }
+  }
+  // Check all size lists for exact match
+  for(const [cat,sizes] of Object.entries(MAT)){
+    if(Array.isArray(sizes) && sizes.includes(str)) return {matCat:cat,matSize:str,matSub1:'',matSub2:''}
+  }
+  // Fallback: other
+  return {matCat:'Other',matSize:'',matSub1:str,matSub2:''}
+}
+
 // ─── SUB-COMPONENTS (all outside App) ────────────────────────
 function MaterialPicker({matCat,matSize,matSub1,matSub2,onChange}){
   const sizes=MAT[matCat],isPlate=matCat==='Plate',isSheet=matCat==='Sheet Metal',isOther=matCat==='Other',hasSizes=Array.isArray(sizes)
@@ -130,9 +154,7 @@ function RForm({form,errs,editTarget,topLevelAssemblies,isPart,primaryParent,pre
       </div>
       <div className="fg">
         <label>Material</label>
-        {editTarget
-          ?<input className="fi" type="text" value={form.material||''} onChange={e=>onField('material',e.target.value)} placeholder='e.g. W10x39'/>
-          :<MaterialPicker matCat={form.matCat||''} matSize={form.matSize||''} matSub1={form.matSub1||''} matSub2={form.matSub2||''} onChange={onMat}/>}
+        <MaterialPicker matCat={form.matCat||''} matSize={form.matSize||''} matSub1={form.matSub1||''} matSub2={form.matSub2||''} onChange={onMat}/>
       </div>
       <div className="fg">
         <label>Eng Job # <span className="req">*</span></label>
@@ -317,7 +339,8 @@ export default function App(){
   const openNew=type=>{setShowForm(type);setEditTarget(null);setErrs({});setForm(type==='r_number'?{...EMPTY_R}:{...EMPTY_V})}
   const openEdit=rec=>{
     setEditTarget(rec);setShowForm(rec.record_type);setErrs({})
-    setForm({r_class:rec.r_class||'Assembly',description:rec.description||'',matCat:'',matSize:'',matSub1:'',matSub2:'',material:rec.material||'',part_type:rec.part_type||'',parent_assemblies:rec.parent_assemblies||[],eng_job_number:rec.eng_job_number||'',eng_job_name:rec.eng_job_name||'',fab_job_number:rec.fab_job_number||'',engineer_drafter:rec.engineer_drafter||'',notes:rec.notes||'',manufacturer:rec.manufacturer||'',vendor_name:rec.vendor_name||'',catalog_number:rec.catalog_number||''})
+    const matFields=parseMaterial(rec.material||'')
+    setForm({r_class:rec.r_class||'Assembly',description:rec.description||'',...matFields,material:rec.material||'',part_type:rec.part_type||'',parent_assemblies:rec.parent_assemblies||[],eng_job_number:rec.eng_job_number||'',eng_job_name:rec.eng_job_name||'',fab_job_number:rec.fab_job_number||'',engineer_drafter:rec.engineer_drafter||'',notes:rec.notes||'',manufacturer:rec.manufacturer||'',vendor_name:rec.vendor_name||'',catalog_number:rec.catalog_number||''})
     setSelected(null)
   }
   const closeForm=()=>{setShowForm(null);setEditTarget(null)}
