@@ -13,9 +13,7 @@ const MAT = {
   'Pipe (Sch 80)': ['1/2" Sch 80','3/4" Sch 80','1" Sch 80','1-1/4" Sch 80','1-1/2" Sch 80','2" Sch 80','2-1/2" Sch 80','3" Sch 80','4" Sch 80','6" Sch 80','8" Sch 80'],
   'Flat Bar': ['1/8x1','1/8x1-1/2','1/8x2','3/16x1','3/16x1-1/2','3/16x2','3/16x3','1/4x1','1/4x1-1/2','1/4x2','1/4x2-1/2','1/4x3','1/4x4','1/4x6','3/8x1','3/8x1-1/2','3/8x2','3/8x3','3/8x4','3/8x6','1/2x1','1/2x2','1/2x3','1/2x4','1/2x6','3/4x2','3/4x3','3/4x4','3/4x6','1x2','1x3','1x4','1x6'],
   'Round Bar': ['1/4"','3/8"','1/2"','5/8"','3/4"','7/8"','1"','1-1/4"','1-1/2"','1-3/4"','2"','2-1/2"','3"','3-1/2"','4"'],
-  'Plate': '__plate__',
-  'Sheet Metal': '__sheet__',
-  'Other': '__other__',
+  'Plate': '__plate__', 'Sheet Metal': '__sheet__', 'Other': '__other__',
 }
 const PLATE_GRADES = ['A36','A572 Gr.50','AR400','A514 / T-1']
 const PLATE_THK = ['3/16"','1/4"','5/16"','3/8"','7/16"','1/2"','5/8"','3/4"','7/8"','1"','1-1/4"','1-1/2"','2"']
@@ -24,235 +22,22 @@ const SHEET_GA = ['26ga','24ga','22ga','20ga','18ga','16ga','14ga','12ga','11ga'
 const PART_TYPES = ['Weldment','Plate','Beam','Channel','Angle','HSS / Tube','Pipe','Flat Bar','Round Bar','Sheet','Casting','Forging','Hardware','Other']
 const R_CLASSES = ['Assembly','Sub-Assembly','Part']
 const PERSONNEL = [
-  {name:'C. Centracco',role:'Engineer'},
-  {name:'A. Germann',role:'Engineer'},
-  {name:'Z. Rader',role:'Engineer'},
-  {name:'P. Centracco',role:'Engineer'},
-  {name:'G. Downing',role:'Drafter'},
-  {name:'A. Wallenmeyer',role:'Drafter'},
-  {name:'C. German',role:'Drafter'},
+  {name:'C. Centracco',role:'Engineer'},{name:'A. Germann',role:'Engineer'},
+  {name:'Z. Rader',role:'Engineer'},{name:'P. Centracco',role:'Engineer'},
+  {name:'G. Downing',role:'Drafter'},{name:'A. Wallenmeyer',role:'Drafter'},{name:'C. German',role:'Drafter'},
 ]
-
-// ─── ALL SUB-COMPONENTS DEFINED OUTSIDE APP ──────────────────
-
-function MaterialPicker({ matCat, matSize, matSub1, matSub2, onChange }) {
-  const sizes = MAT[matCat]
-  const isPlate = matCat==='Plate', isSheet=matCat==='Sheet Metal', isOther=matCat==='Other'
-  const hasSizes = Array.isArray(sizes)
-  const preview = !matCat ? '' : isPlate ? (matSub1&&matSub2?`PL${matSub2} ${matSub1}`:matSub1?`Plate ${matSub1}`:'Plate') : isSheet ? (matSub1&&matSub2?`${matSub2} ${matSub1}`:matSub1||'Sheet Metal') : isOther ? (matSub1||'Other') : (matSize||matCat)
-  return (
-    <div style={{display:'flex',flexDirection:'column',gap:'6px'}}>
-      <select className="fi" value={matCat} onChange={e=>onChange({matCat:e.target.value,matSize:'',matSub1:'',matSub2:''})}>
-        <option value="">Select category…</option>
-        {Object.keys(MAT).map(c=><option key={c} value={c}>{c}</option>)}
-      </select>
-      {hasSizes && <select className="fi" value={matSize} onChange={e=>onChange({matCat,matSize:e.target.value,matSub1,matSub2})}><option value="">Select size…</option>{sizes.map(s=><option key={s} value={s}>{s}</option>)}</select>}
-      {isPlate && <><select className="fi" value={matSub1} onChange={e=>onChange({matCat,matSize,matSub1:e.target.value,matSub2})}><option value="">Select grade…</option>{PLATE_GRADES.map(g=><option key={g} value={g}>{g}</option>)}</select><select className="fi" value={matSub2} onChange={e=>onChange({matCat,matSize,matSub1,matSub2:e.target.value})}><option value="">Select thickness…</option>{PLATE_THK.map(t=><option key={t} value={t}>{t}</option>)}</select></>}
-      {isSheet && <><select className="fi" value={matSub1} onChange={e=>onChange({matCat,matSize,matSub1:e.target.value,matSub2})}><option value="">Select material…</option>{SHEET_MATS.map(m=><option key={m} value={m}>{m}</option>)}</select><select className="fi" value={matSub2} onChange={e=>onChange({matCat,matSize,matSub1,matSub2:e.target.value})}><option value="">Select gauge…</option>{SHEET_GA.map(g=><option key={g} value={g}>{g}</option>)}</select></>}
-      {isOther && <input className="fi" type="text" placeholder="Describe material…" value={matSub1} onChange={e=>onChange({matCat,matSize,matSub1:e.target.value,matSub2})} />}
-      {preview && <div style={{fontFamily:'Courier New,monospace',fontSize:'12px',color:'#f97316',background:'#111',border:'1px solid #1e1e1e',borderLeft:'3px solid #f97316',padding:'6px 10px',borderRadius:'4px'}}>{preview}</div>}
-    </div>
-  )
-}
-
-function AssemblyMultiSelect({ assemblies, selected, onChange }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef(null)
-  useEffect(() => {
-    const h = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
-    document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
-  }, [])
-  const toggle = num => onChange(selected.includes(num) ? selected.filter(x=>x!==num) : [...selected, num])
-  return (
-    <div ref={ref} style={{position:'relative'}}>
-      <div className="fi multi-trigger" onClick={()=>setOpen(o=>!o)}>
-        {selected.length===0 && <span style={{color:'#444'}}>Select parent assemblies…</span>}
-        {selected.map(s=><span key={s} className="multi-tag" onClick={e=>{e.stopPropagation();toggle(s)}}>{s} ✕</span>)}
-      </div>
-      {open && (
-        <div className="multi-drop">
-          {assemblies.length===0 && <div style={{padding:'10px',color:'#555',fontSize:'12px'}}>No assemblies yet</div>}
-          {assemblies.map(a=>(
-            <div key={a.id} className={`multi-opt ${selected.includes(a.part_number)?'multi-opt-sel':''}`} onClick={()=>toggle(a.part_number)}>
-              <span className="pnum-sm pnum-r_number">{a.part_number}</span>
-              <span style={{color:'#aaa'}}>{a.description}</span>
-              {selected.includes(a.part_number) && <span style={{marginLeft:'auto',color:'#f97316'}}>✓</span>}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// RForm — completely outside App, receives all data as props
-function RForm({ form, errs, editTarget, topLevelAssemblies, isPart, primaryParent, previewNum, suggestNext, onField, onMat, onParents }) {
-  const personRole = name => PERSONNEL.find(p=>p.name===name)?.role||''
-  return (
-    <>
-      <div className="fg">
-        <label>Category <span className="req">*</span></label>
-        <div className="rclass-row">
-          {R_CLASSES.map(c=>(
-            <button key={c} type="button" className={`rclass-btn ${form.r_class===c?'rclass-active':''}`}
-              onClick={()=>{ onField('r_class',c); if(c!=='Part') onParents([]) }}>
-              {c}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {isPart && (
-        <div className="fg">
-          <label>Parent Assembly / Assemblies <span className="req">*</span></label>
-          <AssemblyMultiSelect assemblies={topLevelAssemblies} selected={form.parent_assemblies||[]} onChange={onParents} />
-          {errs.parent_assemblies && <span className="em">{errs.parent_assemblies}</span>}
-          {primaryParent && !editTarget && (
-            <div className="parent-note">
-              Primary parent: <strong>{primaryParent}</strong> → next suffix: <strong>{suggestNext(primaryParent)}</strong> → number: <strong>{previewNum}</strong>
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="fg">
-        <label>Description <span className="req">*</span></label>
-        <input className={`fi ${errs.description?'fi-err':''}`} type="text" placeholder="e.g. Skid Assembly — Alpine Energy"
-          value={form.description||''} onChange={e=>onField('description',e.target.value)} />
-        {errs.description && <span className="em">{errs.description}</span>}
-      </div>
-
-      <div className="fg">
-        <label>Type</label>
-        <select className="fi" value={form.part_type||''} onChange={e=>onField('part_type',e.target.value)}>
-          <option value="">Select type…</option>
-          {PART_TYPES.map(t=><option key={t} value={t}>{t}</option>)}
-        </select>
-      </div>
-
-      <div className="fg">
-        <label>Material</label>
-        {editTarget
-          ? <input className="fi" type="text" value={form.material||''} onChange={e=>onField('material',e.target.value)} placeholder='e.g. W10x39, PL1/2" A36' />
-          : <MaterialPicker matCat={form.matCat||''} matSize={form.matSize||''} matSub1={form.matSub1||''} matSub2={form.matSub2||''} onChange={onMat} />
-        }
-      </div>
-
-      <div className="fg">
-        <label>Eng Job # <span className="req">*</span></label>
-        <input className={`fi ${errs.eng_job_number?'fi-err':''}`} type="text" placeholder="E26-001"
-          value={form.eng_job_number||''} onChange={e=>onField('eng_job_number',e.target.value.toUpperCase())} />
-        {errs.eng_job_number && <span className="em">{errs.eng_job_number}</span>}
-      </div>
-
-      <div className="fg">
-        <label>Eng Job Name</label>
-        <input className="fi" type="text" placeholder="e.g. Alpine Energy Services"
-          value={form.eng_job_name||''} onChange={e=>onField('eng_job_name',e.target.value)} />
-      </div>
-
-      <div className="fg">
-        <label>Fab Job #</label>
-        <input className={`fi ${errs.fab_job_number?'fi-err':''}`} type="text" placeholder="26-001"
-          value={form.fab_job_number||''} onChange={e=>onField('fab_job_number',e.target.value)} />
-        {errs.fab_job_number && <span className="em">{errs.fab_job_number}</span>}
-      </div>
-
-      <div className="fg">
-        <label>Engineer / Drafter <span className="req">*</span></label>
-        <select className={`fi ${errs.engineer_drafter?'fi-err':''}`} value={form.engineer_drafter||''} onChange={e=>onField('engineer_drafter',e.target.value)}>
-          <option value="">Select…</option>
-          {PERSONNEL.map(p=><option key={p.name} value={p.name}>{p.name} — {p.role}</option>)}
-        </select>
-        {errs.engineer_drafter && <span className="em">{errs.engineer_drafter}</span>}
-        {form.engineer_drafter && (
-          <div className={`role-badge ${personRole(form.engineer_drafter)==='Drafter'?'role-drafter':'role-engineer'}`}>
-            {personRole(form.engineer_drafter)}
-          </div>
-        )}
-      </div>
-
-      <div className="fg">
-        <label>Notes</label>
-        <textarea className="fi ftxt" placeholder="Additional notes…" value={form.notes||''} onChange={e=>onField('notes',e.target.value)} />
-      </div>
-    </>
-  )
-}
-
-// VForm — completely outside App
-function VForm({ form, errs, onField }) {
-  const personRole = name => PERSONNEL.find(p=>p.name===name)?.role||''
-  return (
-    <>
-      <div className="fg">
-        <label>Description <span className="req">*</span></label>
-        <input className={`fi ${errs.description?'fi-err':''}`} type="text" placeholder='e.g. 3/4-10 Hex Bolt x 2"'
-          value={form.description||''} onChange={e=>onField('description',e.target.value)} />
-        {errs.description && <span className="em">{errs.description}</span>}
-      </div>
-      <div className="fg">
-        <label>Manufacturer <span className="req">*</span></label>
-        <input className={`fi ${errs.manufacturer?'fi-err':''}`} type="text" placeholder="e.g. Parker, Fastenal"
-          value={form.manufacturer||''} onChange={e=>onField('manufacturer',e.target.value)} />
-        {errs.manufacturer && <span className="em">{errs.manufacturer}</span>}
-      </div>
-      <div className="fg">
-        <label>Vendor Name <span className="req">*</span></label>
-        <input className={`fi ${errs.vendor_name?'fi-err':''}`} type="text" placeholder="e.g. MSC, McMaster"
-          value={form.vendor_name||''} onChange={e=>onField('vendor_name',e.target.value)} />
-        {errs.vendor_name && <span className="em">{errs.vendor_name}</span>}
-      </div>
-      <div className="fg">
-        <label>Catalog / Model # <span className="req">*</span></label>
-        <input className={`fi ${errs.catalog_number?'fi-err':''}`} type="text" placeholder="e.g. 11008"
-          value={form.catalog_number||''} onChange={e=>onField('catalog_number',e.target.value)} />
-        {errs.catalog_number && <span className="em">{errs.catalog_number}</span>}
-      </div>
-      <div className="fg">
-        <label>Material / Spec</label>
-        <input className="fi" type="text" placeholder="e.g. Grade 5 Zinc, 304 SS"
-          value={form.material||''} onChange={e=>onField('material',e.target.value)} />
-      </div>
-      <div className="fg">
-        <label>Engineer / Drafter <span className="req">*</span></label>
-        <select className={`fi ${errs.engineer_drafter?'fi-err':''}`} value={form.engineer_drafter||''} onChange={e=>onField('engineer_drafter',e.target.value)}>
-          <option value="">Select…</option>
-          {PERSONNEL.map(p=><option key={p.name} value={p.name}>{p.name} — {p.role}</option>)}
-        </select>
-        {errs.engineer_drafter && <span className="em">{errs.engineer_drafter}</span>}
-        {form.engineer_drafter && (
-          <div className={`role-badge ${personRole(form.engineer_drafter)==='Drafter'?'role-drafter':'role-engineer'}`}>
-            {personRole(form.engineer_drafter)}
-          </div>
-        )}
-      </div>
-      <div className="fg">
-        <label>Notes</label>
-        <textarea className="fi ftxt" value={form.notes||''} onChange={e=>onField('notes',e.target.value)} />
-      </div>
-    </>
-  )
-}
-
-// Modal — no close on outside click
-function Modal({ title, subtitle, onClose, children }) {
-  return (
-    <div className="overlay">
-      <div className="modal">
-        <div className="modal-hdr">
-          <div>
-            <div className="modal-title">{title}</div>
-            {subtitle && <div className="modal-sub">{subtitle}</div>}
-          </div>
-          <button className="x-btn" onClick={onClose}>✕</button>
-        </div>
-        {children}
-      </div>
-    </div>
-  )
-}
+const COLS = [
+  {key:'part_number',label:'Number'},
+  {key:'r_class',label:'Cat'},
+  {key:'description',label:'Description'},
+  {key:'material',label:'Material'},
+  {key:'part_type',label:'Type'},
+  {key:'eng_job_number',label:'Eng Job #'},
+  {key:'eng_job_name',label:'Eng Job Name'},
+  {key:'parent_key',label:'Parent(s) / Mfr'},
+  {key:'engineer_drafter',label:'Eng / Drafter'},
+  {key:'created_at',label:'Date'},
+]
 
 // ─── HELPERS ─────────────────────────────────────────────────
 function nextSuffix(existingSuffixes) {
@@ -261,197 +46,381 @@ function nextSuffix(existingSuffixes) {
   const last = [...existingSuffixes].sort()[existingSuffixes.length-1]
   const increment = s => {
     const arr=s.split(''); let i=arr.length-1
-    while(i>=0){ const idx=chars.indexOf(arr[i]); if(idx<25){arr[i]=chars[idx+1];return arr.join('')} arr[i]='A';i-- }
+    while(i>=0){const idx=chars.indexOf(arr[i]);if(idx<25){arr[i]=chars[idx+1];return arr.join('')}arr[i]='A';i--}
     return 'A'+arr.join('')
   }
   return increment(last)
 }
-
-function fmt(iso) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
-}
-
-function matPreview(f) {
-  const {matCat='',matSize='',matSub1='',matSub2=''}=f
-  if(!matCat) return ''
-  if(matCat==='Plate') return matSub1&&matSub2?`PL${matSub2} ${matSub1}`:matSub1?`Plate ${matSub1}`:'Plate'
-  if(matCat==='Sheet Metal') return matSub1&&matSub2?`${matSub2} ${matSub1}`:matSub1||'Sheet Metal'
-  if(matCat==='Other') return matSub1||'Other'
+function fmt(iso){if(!iso)return '—';return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+function matPreview(f){
+  const{matCat='',matSize='',matSub1='',matSub2=''}=f
+  if(!matCat)return ''
+  if(matCat==='Plate')return matSub1&&matSub2?`PL${matSub2} ${matSub1}`:matSub1?`Plate ${matSub1}`:'Plate'
+  if(matCat==='Sheet Metal')return matSub1&&matSub2?`${matSub2} ${matSub1}`:matSub1||'Sheet Metal'
+  if(matCat==='Other')return matSub1||'Other'
   return matSize||matCat
 }
+function personRole(name){return PERSONNEL.find(p=>p.name===name)?.role||''}
 
-const DEMO = [
+// ─── SUB-COMPONENTS (all outside App) ────────────────────────
+function MaterialPicker({matCat,matSize,matSub1,matSub2,onChange}){
+  const sizes=MAT[matCat],isPlate=matCat==='Plate',isSheet=matCat==='Sheet Metal',isOther=matCat==='Other',hasSizes=Array.isArray(sizes)
+  const preview=!matCat?'':isPlate?(matSub1&&matSub2?`PL${matSub2} ${matSub1}`:matSub1?`Plate ${matSub1}`:'Plate'):isSheet?(matSub1&&matSub2?`${matSub2} ${matSub1}`:matSub1||'Sheet Metal'):isOther?(matSub1||'Other'):(matSize||matCat)
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+      <select className="fi" value={matCat} onChange={e=>onChange({matCat:e.target.value,matSize:'',matSub1:'',matSub2:''})}>
+        <option value="">Select category…</option>{Object.keys(MAT).map(c=><option key={c} value={c}>{c}</option>)}
+      </select>
+      {hasSizes&&<select className="fi" value={matSize} onChange={e=>onChange({matCat,matSize:e.target.value,matSub1,matSub2})}><option value="">Select size…</option>{sizes.map(s=><option key={s} value={s}>{s}</option>)}</select>}
+      {isPlate&&<><select className="fi" value={matSub1} onChange={e=>onChange({matCat,matSize,matSub1:e.target.value,matSub2})}><option value="">Select grade…</option>{PLATE_GRADES.map(g=><option key={g} value={g}>{g}</option>)}</select><select className="fi" value={matSub2} onChange={e=>onChange({matCat,matSize,matSub1,matSub2:e.target.value})}><option value="">Select thickness…</option>{PLATE_THK.map(t=><option key={t} value={t}>{t}</option>)}</select></>}
+      {isSheet&&<><select className="fi" value={matSub1} onChange={e=>onChange({matCat,matSize,matSub1:e.target.value,matSub2})}><option value="">Select material…</option>{SHEET_MATS.map(m=><option key={m} value={m}>{m}</option>)}</select><select className="fi" value={matSub2} onChange={e=>onChange({matCat,matSize,matSub1,matSub2:e.target.value})}><option value="">Select gauge…</option>{SHEET_GA.map(g=><option key={g} value={g}>{g}</option>)}</select></>}
+      {isOther&&<input className="fi" type="text" placeholder="Describe material…" value={matSub1} onChange={e=>onChange({matCat,matSize,matSub1:e.target.value,matSub2})}/>}
+      {preview&&<div style={{fontFamily:'Courier New,monospace',fontSize:'12px',color:'#f97316',background:'#111',border:'1px solid #1e1e1e',borderLeft:'3px solid #f97316',padding:'6px 10px',borderRadius:'4px'}}>{preview}</div>}
+    </div>
+  )
+}
+
+function AssemblyMultiSelect({assemblies,selected,onChange}){
+  const[open,setOpen]=useState(false),ref=useRef(null)
+  useEffect(()=>{const h=e=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false)};document.addEventListener('mousedown',h);return()=>document.removeEventListener('mousedown',h)},[])
+  const toggle=num=>onChange(selected.includes(num)?selected.filter(x=>x!==num):[...selected,num])
+  return(
+    <div ref={ref} style={{position:'relative'}}>
+      <div className="fi multi-trigger" onClick={()=>setOpen(o=>!o)}>
+        {selected.length===0&&<span style={{color:'#444'}}>Select parent assemblies…</span>}
+        {selected.map(s=><span key={s} className="multi-tag" onClick={e=>{e.stopPropagation();toggle(s)}}>{s} ✕</span>)}
+      </div>
+      {open&&<div className="multi-drop">
+        {assemblies.length===0&&<div style={{padding:'10px',color:'#555',fontSize:'12px'}}>No assemblies yet</div>}
+        {assemblies.map(a=><div key={a.id} className={`multi-opt ${selected.includes(a.part_number)?'multi-opt-sel':''}`} onClick={()=>toggle(a.part_number)}>
+          <span className="pnum-sm pnum-r_number">{a.part_number}</span><span style={{color:'#aaa'}}>{a.description}</span>
+          {selected.includes(a.part_number)&&<span style={{marginLeft:'auto',color:'#f97316'}}>✓</span>}
+        </div>)}
+      </div>}
+    </div>
+  )
+}
+
+function RForm({form,errs,editTarget,topLevelAssemblies,isPart,primaryParent,previewNum,suggestNext,onField,onMat,onParents}){
+  return(
+    <>
+      <div className="fg">
+        <label>Category <span className="req">*</span></label>
+        <div className="rclass-row">
+          {R_CLASSES.map(c=><button key={c} type="button" className={`rclass-btn ${form.r_class===c?'rclass-active':''}`}
+            onClick={()=>{onField('r_class',c);if(c!=='Part')onParents([])}}>{c}</button>)}
+        </div>
+      </div>
+      {isPart&&<div className="fg">
+        <label>Parent Assembly / Assemblies <span className="req">*</span></label>
+        <AssemblyMultiSelect assemblies={topLevelAssemblies} selected={form.parent_assemblies||[]} onChange={onParents}/>
+        {errs.parent_assemblies&&<span className="em">{errs.parent_assemblies}</span>}
+        {primaryParent&&!editTarget&&<div className="parent-note">Primary parent: <strong>{primaryParent}</strong> → next suffix: <strong>{suggestNext(primaryParent)}</strong> → number: <strong>{previewNum}</strong></div>}
+      </div>}
+      <div className="fg">
+        <label>Description <span className="req">*</span></label>
+        <input className={`fi ${errs.description?'fi-err':''}`} type="text" placeholder="e.g. Skid Assembly — Alpine Energy" value={form.description||''} onChange={e=>onField('description',e.target.value)}/>
+        {errs.description&&<span className="em">{errs.description}</span>}
+      </div>
+      <div className="fg">
+        <label>Type</label>
+        <select className="fi" value={form.part_type||''} onChange={e=>onField('part_type',e.target.value)}>
+          <option value="">Select type…</option>{PART_TYPES.map(t=><option key={t} value={t}>{t}</option>)}
+        </select>
+      </div>
+      <div className="fg">
+        <label>Material</label>
+        {editTarget
+          ?<input className="fi" type="text" value={form.material||''} onChange={e=>onField('material',e.target.value)} placeholder='e.g. W10x39'/>
+          :<MaterialPicker matCat={form.matCat||''} matSize={form.matSize||''} matSub1={form.matSub1||''} matSub2={form.matSub2||''} onChange={onMat}/>}
+      </div>
+      <div className="fg">
+        <label>Eng Job # <span className="req">*</span></label>
+        <input className={`fi ${errs.eng_job_number?'fi-err':''}`} type="text" placeholder="E26-001" value={form.eng_job_number||''} onChange={e=>onField('eng_job_number',e.target.value.toUpperCase())}/>
+        {errs.eng_job_number&&<span className="em">{errs.eng_job_number}</span>}
+      </div>
+      <div className="fg">
+        <label>Eng Job Name</label>
+        <input className="fi" type="text" placeholder="e.g. Alpine Energy Services" value={form.eng_job_name||''} onChange={e=>onField('eng_job_name',e.target.value)}/>
+      </div>
+      <div className="fg">
+        <label>Fab Job #</label>
+        <input className={`fi ${errs.fab_job_number?'fi-err':''}`} type="text" placeholder="26-001" value={form.fab_job_number||''} onChange={e=>onField('fab_job_number',e.target.value)}/>
+        {errs.fab_job_number&&<span className="em">{errs.fab_job_number}</span>}
+      </div>
+      <div className="fg">
+        <label>Engineer / Drafter <span className="req">*</span></label>
+        <select className={`fi ${errs.engineer_drafter?'fi-err':''}`} value={form.engineer_drafter||''} onChange={e=>onField('engineer_drafter',e.target.value)}>
+          <option value="">Select…</option>{PERSONNEL.map(p=><option key={p.name} value={p.name}>{p.name} — {p.role}</option>)}
+        </select>
+        {errs.engineer_drafter&&<span className="em">{errs.engineer_drafter}</span>}
+        {form.engineer_drafter&&<div className={`role-badge ${personRole(form.engineer_drafter)==='Drafter'?'role-drafter':'role-engineer'}`}>{personRole(form.engineer_drafter)}</div>}
+      </div>
+      <div className="fg">
+        <label>Notes</label>
+        <textarea className="fi ftxt" placeholder="Additional notes…" value={form.notes||''} onChange={e=>onField('notes',e.target.value)}/>
+      </div>
+    </>
+  )
+}
+
+function VForm({form,errs,onField}){
+  return(
+    <>
+      <div className="fg"><label>Description <span className="req">*</span></label><input className={`fi ${errs.description?'fi-err':''}`} type="text" placeholder='e.g. 3/4-10 Hex Bolt x 2"' value={form.description||''} onChange={e=>onField('description',e.target.value)}/>{errs.description&&<span className="em">{errs.description}</span>}</div>
+      <div className="fg"><label>Manufacturer <span className="req">*</span></label><input className={`fi ${errs.manufacturer?'fi-err':''}`} type="text" placeholder="e.g. Parker, Fastenal" value={form.manufacturer||''} onChange={e=>onField('manufacturer',e.target.value)}/>{errs.manufacturer&&<span className="em">{errs.manufacturer}</span>}</div>
+      <div className="fg"><label>Vendor Name <span className="req">*</span></label><input className={`fi ${errs.vendor_name?'fi-err':''}`} type="text" placeholder="e.g. MSC, McMaster" value={form.vendor_name||''} onChange={e=>onField('vendor_name',e.target.value)}/>{errs.vendor_name&&<span className="em">{errs.vendor_name}</span>}</div>
+      <div className="fg"><label>Catalog / Model # <span className="req">*</span></label><input className={`fi ${errs.catalog_number?'fi-err':''}`} type="text" placeholder="e.g. 11008" value={form.catalog_number||''} onChange={e=>onField('catalog_number',e.target.value)}/>{errs.catalog_number&&<span className="em">{errs.catalog_number}</span>}</div>
+      <div className="fg"><label>Material / Spec</label><input className="fi" type="text" placeholder="e.g. Grade 5 Zinc, 304 SS" value={form.material||''} onChange={e=>onField('material',e.target.value)}/></div>
+      <div className="fg">
+        <label>Engineer / Drafter <span className="req">*</span></label>
+        <select className={`fi ${errs.engineer_drafter?'fi-err':''}`} value={form.engineer_drafter||''} onChange={e=>onField('engineer_drafter',e.target.value)}>
+          <option value="">Select…</option>{PERSONNEL.map(p=><option key={p.name} value={p.name}>{p.name} — {p.role}</option>)}
+        </select>
+        {errs.engineer_drafter&&<span className="em">{errs.engineer_drafter}</span>}
+        {form.engineer_drafter&&<div className={`role-badge ${personRole(form.engineer_drafter)==='Drafter'?'role-drafter':'role-engineer'}`}>{personRole(form.engineer_drafter)}</div>}
+      </div>
+      <div className="fg"><label>Notes</label><textarea className="fi ftxt" value={form.notes||''} onChange={e=>onField('notes',e.target.value)}/></div>
+    </>
+  )
+}
+
+function Modal({title,subtitle,onClose,children}){
+  return(
+    <div className="overlay">
+      <div className="modal">
+        <div className="modal-hdr">
+          <div><div className="modal-title">{title}</div>{subtitle&&<div className="modal-sub">{subtitle}</div>}</div>
+          <button className="x-btn" onClick={onClose}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function ConfirmModal({message,onConfirm,onCancel}){
+  return(
+    <div className="overlay">
+      <div className="modal" style={{maxWidth:'380px'}}>
+        <div className="modal-hdr"><div className="modal-title" style={{color:'#ef4444'}}>Confirm Delete</div></div>
+        <div className="form-bod"><p style={{color:'#ccc',marginBottom:'8px'}}>{message}</p><p style={{color:'#666',fontSize:'12px'}}>This cannot be undone.</p></div>
+        <div className="modal-ftr">
+          <button className="btn-ghost" onClick={onCancel}>Cancel</button>
+          <button className="btn-delete" onClick={onConfirm}>Delete</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const DEMO=[
   {id:'da1',part_number:'R00001',record_type:'r_number',r_class:'Assembly',description:'Skid Assembly — Alpine Energy',material:'',part_type:'Weldment',parent_assemblies:[],eng_job_number:'E26-001',eng_job_name:'Alpine Energy Services',fab_job_number:'26-126',engineer_drafter:'C. Centracco',notes:'',created_at:new Date(Date.now()-172800000).toISOString()},
-  {id:'dp1',part_number:'R00001A',record_type:'r_number',r_class:'Part',description:'Base Beam',material:'W10x39',part_type:'Beam',parent_assemblies:['R00001'],eng_job_number:'E26-001',eng_job_name:'Alpine Energy Services',fab_job_number:'26-126',engineer_drafter:'C. Centracco',notes:'Cut to 144"',created_at:new Date(Date.now()-172000000).toISOString()},
+  {id:'dp1',part_number:'R00001A',record_type:'r_number',r_class:'Part',description:'Base Beam',material:'W10x39',part_type:'Beam',parent_assemblies:['R00001'],eng_job_number:'E26-001',eng_job_name:'Alpine Energy Services',fab_job_number:'26-126',engineer_drafter:'C. Centracco',notes:'',created_at:new Date(Date.now()-172000000).toISOString()},
   {id:'da2',part_number:'R00002',record_type:'r_number',r_class:'Assembly',description:'Control Panel Weldment',material:'',part_type:'Weldment',parent_assemblies:[],eng_job_number:'E26-002',eng_job_name:'Alpine Energy Services',fab_job_number:'',engineer_drafter:'C. Centracco',notes:'',created_at:new Date(Date.now()-86400000).toISOString()},
-  {id:'dv1',part_number:'V00001',record_type:'vendor',description:'3/4-10 Hex Bolt x 2"',manufacturer:'Fastenal',vendor_name:'Fastenal',catalog_number:'11008',material:'Grade 5 Zinc',engineer_drafter:'',notes:'',created_at:new Date(Date.now()-50000000).toISOString()},
 ]
+const EMPTY_R={r_class:'Assembly',description:'',matCat:'',matSize:'',matSub1:'',matSub2:'',part_type:'',parent_assemblies:[],eng_job_number:'',eng_job_name:'',fab_job_number:'',engineer_drafter:'',notes:''}
+const EMPTY_V={description:'',manufacturer:'',vendor_name:'',catalog_number:'',material:'',engineer_drafter:'',notes:''}
 
-const EMPTY_R = {r_class:'Assembly',description:'',matCat:'',matSize:'',matSub1:'',matSub2:'',part_type:'',parent_assemblies:[],eng_job_number:'',eng_job_name:'',fab_job_number:'',engineer_drafter:'',notes:''}
-const EMPTY_V = {description:'',manufacturer:'',vendor_name:'',catalog_number:'',material:'',engineer_drafter:'',notes:''}
+export default function App(){
+  const[records,setRecords]=useState([])
+  const[loading,setLoading]=useState(true)
+  const[isDemo,setIsDemo]=useState(false)
+  const[demoR,setDemoR]=useState(2)
+  const[demoV,setDemoV]=useState(0)
+  const[tab,setTab]=useState('all')
+  const[search,setSearch]=useState('')
+  const[selected,setSelected]=useState(null)
+  const[showForm,setShowForm]=useState(null)
+  const[editTarget,setEditTarget]=useState(null)
+  const[deleteTarget,setDeleteTarget]=useState(null)
+  const[form,setForm]=useState({})
+  const[errs,setErrs]=useState({})
+  const[saving,setSaving]=useState(false)
+  const[toast,setToast]=useState(null)
+  const[sortCol,setSortCol]=useState('part_number')
+  const[sortDir,setSortDir]=useState('asc')
+  const[activityLog,setActivityLog]=useState([])
 
-// ─── APP ─────────────────────────────────────────────────────
-export default function App() {
-  const [records, setRecords]     = useState([])
-  const [loading, setLoading]     = useState(true)
-  const [isDemo, setIsDemo]       = useState(false)
-  const [demoR, setDemoR]         = useState(2)
-  const [demoV, setDemoV]         = useState(1)
-  const [tab, setTab]             = useState('all')
-  const [search, setSearch]       = useState('')
-  const [selected, setSelected]   = useState(null)
-  const [showForm, setShowForm]   = useState(null)
-  const [editTarget, setEditTarget] = useState(null)
-  const [form, setForm]           = useState({})
-  const [errs, setErrs]           = useState({})
-  const [saving, setSaving]       = useState(false)
-  const [toast, setToast]         = useState(null)
+  const notify=(msg,type='ok')=>{setToast({msg,type});setTimeout(()=>setToast(null),3500)}
 
-  const notify = (msg,type='ok') => { setToast({msg,type}); setTimeout(()=>setToast(null),3500) }
+  const addLog=(action,rec)=>{
+    setActivityLog(prev=>[{id:Date.now(),action,part_number:rec.part_number,description:rec.description,engineer_drafter:rec.engineer_drafter||'System',ts:new Date().toISOString()},...prev].slice(0,50))
+  }
 
-  const load = useCallback(async () => {
+  const load=useCallback(async()=>{
     setLoading(true)
-    const {data,error} = await supabase.from('parts').select('*').order('part_number',{ascending:true})
-    if (error||!data) { setIsDemo(true); setRecords(DEMO) }
-    else { setIsDemo(false); setRecords(data) }
+    const{data,error}=await supabase.from('parts').select('*').order('part_number',{ascending:true})
+    if(error||!data){setIsDemo(true);setRecords(DEMO);setActivityLog(DEMO.map(r=>({id:r.id+'l',action:'Created',part_number:r.part_number,description:r.description,engineer_drafter:r.engineer_drafter,ts:r.created_at})))}
+    else{setIsDemo(false);setRecords(data)}
     setLoading(false)
   },[])
 
-  useEffect(()=>{ load() },[load])
+  useEffect(()=>{load()},[load])
 
-  const rRecords = records.filter(r=>r.record_type==='r_number').sort((a,b)=>a.part_number.localeCompare(b.part_number))
-  const vendors  = records.filter(r=>r.record_type==='vendor').sort((a,b)=>a.part_number.localeCompare(b.part_number))
-  const topLevelAssemblies = rRecords.filter(r=>/^R\d{5}$/.test(r.part_number))
+  const rRecords=records.filter(r=>r.record_type==='r_number')
+  const vendors=records.filter(r=>r.record_type==='vendor')
+  const topLevelAssemblies=rRecords.filter(r=>/^R\d{5}$/.test(r.part_number))
 
-  const suggestNext = useCallback(parentNum => {
-    const children = rRecords.filter(r=>{
-      const rest=r.part_number.replace(parentNum,'')
-      return r.part_number.startsWith(parentNum)&&rest.length>0&&/^[A-Z]+$/.test(rest)
-    })
+  const suggestNext=useCallback(parentNum=>{
+    const children=rRecords.filter(r=>{const rest=r.part_number.replace(parentNum,'');return r.part_number.startsWith(parentNum)&&rest.length>0&&/^[A-Z]+$/.test(rest)})
     return nextSuffix(children.map(c=>c.part_number.replace(parentNum,'')))
   },[rRecords])
 
-  const nextRTop = useCallback(() => {
+  const nextRTop=useCallback(()=>{
     const nums=rRecords.filter(r=>/^R\d{5}$/.test(r.part_number)).map(r=>parseInt(r.part_number.replace('R','')))
-    return `R${String((nums.length>0?Math.max(...nums):isDemo?demoR:0)+1).padStart(5,'0')}`
+    return`R${String((nums.length>0?Math.max(...nums):isDemo?demoR:0)+1).padStart(5,'0')}`
   },[rRecords,isDemo,demoR])
 
-  const nextVNum = useCallback(() => {
+  const nextVNum=useCallback(()=>{
     const nums=vendors.map(v=>parseInt(v.part_number.replace('V','')))
-    return `V${String((nums.length>0?Math.max(...nums):isDemo?demoV:0)+1).padStart(5,'0')}`
+    return`V${String((nums.length>0?Math.max(...nums):isDemo?demoV:0)+1).padStart(5,'0')}`
   },[vendors,isDemo,demoV])
 
-  const isPart = form.r_class==='Part'
-  const primaryParent = (form.parent_assemblies||[])[0]
-  const previewNum = showForm==='vendor' ? nextVNum() : editTarget ? editTarget.part_number : isPart&&primaryParent ? `${primaryParent}${suggestNext(primaryParent)}` : nextRTop()
+  const isPart=form.r_class==='Part'
+  const primaryParent=(form.parent_assemblies||[])[0]
+  const previewNum=showForm==='vendor'?nextVNum():editTarget?editTarget.part_number:isPart&&primaryParent?`${primaryParent}${suggestNext(primaryParent)}`:nextRTop()
 
-  // Stable callbacks — won't cause RForm/VForm to remount
-  const onField = useCallback((k,v) => {
-    setForm(f=>({...f,[k]:v}))
-    setErrs(e=>({...e,[k]:undefined}))
-  },[])
+  const onField=useCallback((k,v)=>{setForm(f=>({...f,[k]:v}));setErrs(e=>({...e,[k]:undefined}))},[])
+  const onMat=useCallback(fields=>setForm(f=>({...f,...fields})),[])
+  const onParents=useCallback(v=>{setForm(f=>({...f,parent_assemblies:v}));setErrs(e=>({...e,parent_assemblies:undefined}))},[])
 
-  const onMat = useCallback(fields => setForm(f=>({...f,...fields})),[])
-  const onParents = useCallback(v => { setForm(f=>({...f,parent_assemblies:v})); setErrs(e=>({...e,parent_assemblies:undefined})) },[])
-
-  const openNew = type => {
-    setShowForm(type); setEditTarget(null); setErrs({})
-    setForm(type==='r_number'?{...EMPTY_R}:{...EMPTY_V})
-  }
-
-  const openEdit = rec => {
-    setEditTarget(rec); setShowForm(rec.record_type); setErrs({})
-    setForm({
-      r_class:rec.r_class||'Assembly', description:rec.description||'',
-      matCat:'',matSize:'',matSub1:'',matSub2:'', material:rec.material||'',
-      part_type:rec.part_type||'', parent_assemblies:rec.parent_assemblies||[],
-      eng_job_number:rec.eng_job_number||'', eng_job_name:rec.eng_job_name||'',
-      fab_job_number:rec.fab_job_number||'', engineer_drafter:rec.engineer_drafter||'',
-      notes:rec.notes||'', manufacturer:rec.manufacturer||'',
-      vendor_name:rec.vendor_name||'', catalog_number:rec.catalog_number||'',
-    })
+  const openNew=type=>{setShowForm(type);setEditTarget(null);setErrs({});setForm(type==='r_number'?{...EMPTY_R}:{...EMPTY_V})}
+  const openEdit=rec=>{
+    setEditTarget(rec);setShowForm(rec.record_type);setErrs({})
+    setForm({r_class:rec.r_class||'Assembly',description:rec.description||'',matCat:'',matSize:'',matSub1:'',matSub2:'',material:rec.material||'',part_type:rec.part_type||'',parent_assemblies:rec.parent_assemblies||[],eng_job_number:rec.eng_job_number||'',eng_job_name:rec.eng_job_name||'',fab_job_number:rec.fab_job_number||'',engineer_drafter:rec.engineer_drafter||'',notes:rec.notes||'',manufacturer:rec.manufacturer||'',vendor_name:rec.vendor_name||'',catalog_number:rec.catalog_number||''})
     setSelected(null)
   }
+  const closeForm=()=>{setShowForm(null);setEditTarget(null)}
 
-  const closeForm = () => { setShowForm(null); setEditTarget(null) }
-
-  const validate = () => {
+  const validate=()=>{
     const e={}
-    if (!form.description?.trim()) e.description='Required'
-    if (!form.engineer_drafter) e.engineer_drafter='Required'
-    if (showForm==='r_number') {
-      if (!form.eng_job_number?.trim()) e.eng_job_number='Required'
-      else if (!/^E\d{2}-\d{3,}$/.test(form.eng_job_number.trim())) e.eng_job_number='Format: E26-001'
-      if (isPart&&!primaryParent) e.parent_assemblies='Select at least one parent assembly'
-      if (form.fab_job_number&&!/^\d{2}-\d{3,}$/.test(form.fab_job_number.trim())) e.fab_job_number='Format: 26-001'
+    if(!form.description?.trim())e.description='Required'
+    if(!form.engineer_drafter)e.engineer_drafter='Required'
+    if(showForm==='r_number'){
+      if(!form.eng_job_number?.trim())e.eng_job_number='Required'
+      else if(!/^E\d{2}-\d{3,}$/.test(form.eng_job_number.trim()))e.eng_job_number='Format: E26-001'
+      if(isPart&&!primaryParent)e.parent_assemblies='Select at least one parent assembly'
+      if(form.fab_job_number&&!/^\d{2}-\d{3,}$/.test(form.fab_job_number.trim()))e.fab_job_number='Format: 26-001'
     }
-    if (showForm==='vendor') {
-      if (!form.manufacturer?.trim()) e.manufacturer='Required'
-      if (!form.vendor_name?.trim()) e.vendor_name='Required'
-      if (!form.catalog_number?.trim()) e.catalog_number='Required'
+    if(showForm==='vendor'){
+      if(!form.manufacturer?.trim())e.manufacturer='Required'
+      if(!form.vendor_name?.trim())e.vendor_name='Required'
+      if(!form.catalog_number?.trim())e.catalog_number='Required'
     }
-    setErrs(e); return Object.keys(e).length===0
+    setErrs(e);return Object.keys(e).length===0
   }
 
-  const handleSubmit = async () => {
-    if (!validate()) return
+  const handleSubmit=async()=>{
+    if(!validate())return
     setSaving(true)
-    const material = showForm==='r_number' ? (matPreview(form)||form.material||'') : (form.material||'')
-    if (isDemo) {
-      if (editTarget) {
-        setRecords(prev=>prev.map(r=>r.id===editTarget.id?{...r,...form,material}:r).sort((a,b)=>a.part_number.localeCompare(b.part_number)))
+    const material=showForm==='r_number'?(matPreview(form)||form.material||''):(form.material||'')
+
+    // Compute the actual part number for new records
+    let computedNum=''
+    if(!editTarget){
+      if(showForm==='r_number'){
+        computedNum=isPart&&primaryParent?`${primaryParent}${suggestNext(primaryParent)}`:nextRTop()
+      } else {
+        computedNum=nextVNum()
+      }
+    }
+
+    if(isDemo){
+      if(editTarget){
+        setRecords(prev=>prev.map(r=>r.id===editTarget.id?{...r,...form,material}:r))
+        addLog('Edited',{...editTarget,...form})
         notify(`${editTarget.part_number} updated (demo)`)
       } else {
-        const num = showForm==='r_number' ? (isPart&&primaryParent?`${primaryParent}${suggestNext(primaryParent)}`:nextRTop()) : nextVNum()
-        const rec = {id:`d${Date.now()}`,record_type:showForm,part_number:num,...form,material,created_at:new Date().toISOString()}
-        setRecords(prev=>[...prev,rec].sort((a,b)=>a.part_number.localeCompare(b.part_number)))
-        if (showForm==='r_number') setDemoR(n=>Math.max(n,parseInt(num.match(/\d{5}/)?.[0]||'0')))
-        else setDemoV(n=>n+1)
-        notify(`${num} created (demo)`)
+        const rec={id:`d${Date.now()}`,record_type:showForm,part_number:computedNum,...form,material,created_at:new Date().toISOString()}
+        setRecords(prev=>[...prev,rec])
+        if(showForm==='r_number'&&!isPart)setDemoR(n=>Math.max(n,parseInt(computedNum.replace('R',''))||n))
+        if(showForm==='vendor')setDemoV(n=>n+1)
+        addLog('Created',rec)
+        notify(`${computedNum} created (demo)`)
       }
-      closeForm(); setSaving(false); return
+      closeForm();setSaving(false);return
     }
-    const {matCat,matSize,matSub1,matSub2,...clean}=form
-    if (editTarget) {
-      const {error}=await supabase.from('parts').update({...clean,material}).eq('id',editTarget.id)
-      if (error) notify(error.message,'err')
-      else { notify(`${editTarget.part_number} updated`); setRecords(prev=>prev.map(r=>r.id===editTarget.id?{...r,...clean,material}:r).sort((a,b)=>a.part_number.localeCompare(b.part_number))); closeForm() }
+
+    const{matCat,matSize,matSub1,matSub2,...clean}=form
+    if(editTarget){
+      const{error}=await supabase.from('parts').update({...clean,material}).eq('id',editTarget.id)
+      if(error)notify(error.message,'err')
+      else{
+        setRecords(prev=>prev.map(r=>r.id===editTarget.id?{...r,...clean,material}:r))
+        addLog('Edited',{...editTarget,...clean})
+        notify(`${editTarget.part_number} updated`)
+        closeForm()
+      }
     } else {
-      const {data,error}=await supabase.from('parts').insert([{...clean,material,record_type:showForm,part_number:''}]).select().single()
-      if (error) notify(error.message,'err')
-      else { notify(`${data.part_number} created`); setRecords(prev=>[...prev,data].sort((a,b)=>a.part_number.localeCompare(b.part_number))); closeForm() }
+      // Send computed part_number so DB doesn't override with sequence
+      const{data,error}=await supabase.from('parts').insert([{...clean,material,record_type:showForm,part_number:computedNum}]).select().single()
+      if(error)notify(error.message,'err')
+      else{
+        setRecords(prev=>[...prev,data])
+        addLog('Created',data)
+        notify(`${data.part_number} created`)
+        closeForm()
+      }
     }
     setSaving(false)
   }
 
-  const personRole = name => PERSONNEL.find(p=>p.name===name)?.role||''
+  const handleDelete=async()=>{
+    if(!deleteTarget)return
+    if(isDemo){
+      setRecords(prev=>prev.filter(r=>r.id!==deleteTarget.id))
+      addLog('Deleted',deleteTarget)
+      notify(`${deleteTarget.part_number} deleted (demo)`)
+      setDeleteTarget(null);setSelected(null);return
+    }
+    const{error}=await supabase.from('parts').delete().eq('id',deleteTarget.id)
+    if(error)notify(error.message,'err')
+    else{
+      setRecords(prev=>prev.filter(r=>r.id!==deleteTarget.id))
+      addLog('Deleted',deleteTarget)
+      notify(`${deleteTarget.part_number} deleted`)
+      setDeleteTarget(null);setSelected(null)
+    }
+  }
 
-  const filtered = records.filter(r=>{
-    const q=search.toLowerCase()
-    const matchTab=tab==='all'||r.record_type===tab
-    const matchSearch=!q||[r.part_number,r.description,r.material,r.eng_job_number,r.eng_job_name,r.manufacturer,r.catalog_number,...(r.parent_assemblies||[])].some(v=>v?.toLowerCase?.().includes(q))
-    return matchTab&&matchSearch
-  })
+  const toggleSort=col=>{
+    if(sortCol===col)setSortDir(d=>d==='asc'?'desc':'asc')
+    else{setSortCol(col);setSortDir('asc')}
+  }
 
-  return (
+  const sortedFiltered=records
+    .filter(r=>{
+      const q=search.toLowerCase()
+      const matchTab=tab==='all'||r.record_type===tab
+      const parentKey=(r.parent_assemblies||[]).join(', ')||r.manufacturer||''
+      const matchSearch=!q||[r.part_number,r.description,r.material,r.eng_job_number,r.eng_job_name,r.manufacturer,r.catalog_number,parentKey].some(v=>v?.toLowerCase?.().includes(q))
+      return matchTab&&matchSearch
+    })
+    .sort((a,b)=>{
+      const av=sortCol==='parent_key'?((a.parent_assemblies||[]).join(',')||a.manufacturer||''):a[sortCol]||''
+      const bv=sortCol==='parent_key'?((b.parent_assemblies||[]).join(',')||b.manufacturer||''):b[sortCol]||''
+      return sortDir==='asc'?av.localeCompare(bv,undefined,{numeric:true}):bv.localeCompare(av,undefined,{numeric:true})
+    })
+
+  const SortTh=({col,children})=>(
+    <th onClick={()=>toggleSort(col)} style={{cursor:'pointer',userSelect:'none',whiteSpace:'nowrap'}}>
+      {children}{sortCol===col?<span style={{marginLeft:'4px',color:'#f97316'}}>{sortDir==='asc'?'↑':'↓'}</span>:<span style={{marginLeft:'4px',color:'#333'}}>↕</span>}
+    </th>
+  )
+
+  return(
     <div className="app">
       <header className="hdr">
         <div className="logo-wrap"><span className="logo-r">RIGID</span><span className="logo-sub">INDUSTRIAL GROUP</span></div>
-        <nav className="nav">
-          <span className="nl active">PARTS</span><span className="nl">JOBS</span><span className="nl">SCHEDULE</span><span className="nl">REPORTS</span><span className="nl">WORKFORCE</span>
-        </nav>
+        <nav className="nav"><span className="nl active">PARTS</span><span className="nl">JOBS</span><span className="nl">SCHEDULE</span><span className="nl">REPORTS</span><span className="nl">WORKFORCE</span></nav>
         <div className="usr"><div className="usr-name">Caleb Centracco</div><div className="usr-role">Project Manager</div></div>
       </header>
-
-      <div className="bc">
-        <span className="bc-a">Parts</span><span className="bc-sep"> / </span><span className="bc-b">Registry</span>
-        {isDemo && <span className="demo-pill">DEMO MODE</span>}
-      </div>
+      <div className="bc"><span className="bc-a">Parts</span><span className="bc-sep"> / </span><span className="bc-b">Registry</span>{isDemo&&<span className="demo-pill">DEMO MODE</span>}</div>
 
       <div className="pg-hdr">
         <div>
-          <div className="pg-title-row"><span className="pg-num">PARTS</span><span className="pill-open">OPEN</span><span className="pill-norm">NORMAL</span></div>
+          <div className="pg-title-row"><span className="pg-num">PARTS</span></div>
           <div className="pg-client">Part &amp; Assembly Number Registry</div>
         </div>
         <div className="btn-group">
@@ -475,21 +444,30 @@ export default function App() {
                 <button key={k} className={`tab ${tab===k?'tab-active':''}`} onClick={()=>setTab(k)}>{l}</button>
               ))}
             </div>
-            <input className="search" type="text" placeholder="Search…" value={search} onChange={e=>setSearch(e.target.value)} />
+            <input className="search" type="text" placeholder="Search…" value={search} onChange={e=>setSearch(e.target.value)}/>
           </div>
 
-          {loading ? <div className="msg">Loading…</div> : filtered.length===0 ? (
+          {loading?<div className="msg">Loading…</div>:sortedFiltered.length===0?(
             <div className="msg">{search?'No results.':'No records yet.'}</div>
-          ) : (
+          ):(
             <table className="tbl">
               <thead>
                 <tr>
-                  <th>Number</th><th>Cat</th><th>Description</th><th>Material</th><th>Type</th>
-                  <th>Eng Job #</th><th>Eng Job Name</th><th>Parent(s) / Mfr</th><th>Eng / Drafter</th><th>Date</th><th></th>
+                  <SortTh col="part_number">Number</SortTh>
+                  <SortTh col="r_class">Cat</SortTh>
+                  <SortTh col="description">Description</SortTh>
+                  <SortTh col="material">Material</SortTh>
+                  <SortTh col="part_type">Type</SortTh>
+                  <SortTh col="eng_job_number">Eng Job #</SortTh>
+                  <SortTh col="eng_job_name">Eng Job Name</SortTh>
+                  <SortTh col="parent_key">Parent(s) / Mfr</SortTh>
+                  <SortTh col="engineer_drafter">Eng / Drafter</SortTh>
+                  <SortTh col="created_at">Date</SortTh>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(r=>(
+                {sortedFiltered.map(r=>(
                   <tr key={r.id} className={`trow trow-${r.record_type}`} onClick={()=>setSelected(r)}>
                     <td><span className={`pnum pnum-${r.record_type}`}>{r.part_number}</span></td>
                     <td><span className={`rtag rtag-${r.r_class||r.record_type}`}>{r.r_class||(r.record_type==='vendor'?'VND':'R')}</span></td>
@@ -501,7 +479,10 @@ export default function App() {
                     <td className="job">{(r.parent_assemblies||[]).join(', ')||r.manufacturer||<span className="na">—</span>}</td>
                     <td className="dim">{r.engineer_drafter||<span className="na">—</span>}</td>
                     <td className="dim">{fmt(r.created_at)}</td>
-                    <td onClick={e=>e.stopPropagation()}><button className="edit-btn" onClick={()=>openEdit(r)}>Edit</button></td>
+                    <td onClick={e=>e.stopPropagation()} style={{whiteSpace:'nowrap'}}>
+                      <button className="edit-btn" onClick={()=>openEdit(r)}>Edit</button>
+                      <button className="edit-btn del-btn" onClick={()=>setDeleteTarget(r)} style={{marginLeft:'4px'}}>Delete</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -512,27 +493,28 @@ export default function App() {
         <div className="log-panel">
           <div className="panel-hdr"><span className="panel-label">ACTIVITY LOG</span></div>
           <div className="log-list">
-            {[...records].sort((a,b)=>b.created_at>a.created_at?1:-1).slice(0,12).map(r=>(
+            {activityLog.length===0&&records.length>0&&[...records].sort((a,b)=>b.created_at>a.created_at?1:-1).slice(0,12).map(r=>(
               <div key={r.id} className="log-item">
-                <span className={`log-dot ld-${r.record_type}`}>✓</span>
-                <div>
-                  <div className="log-line"><span className={`pnum-sm pnum-${r.record_type}`}>{r.part_number}</span>{r.description}</div>
-                  <div className="log-meta">{r.engineer_drafter||'System'} · {fmt(r.created_at)}</div>
-                </div>
+                <span className="log-dot ld-r_number">✓</span>
+                <div><div className="log-line"><span className={`pnum-sm pnum-${r.record_type}`}>{r.part_number}</span>{r.description}</div><div className="log-meta">{r.engineer_drafter||'System'} · {fmt(r.created_at)}</div></div>
               </div>
             ))}
-            {records.length===0&&<div className="dim" style={{padding:'12px'}}>No activity yet</div>}
+            {activityLog.map(l=>(
+              <div key={l.id} className="log-item">
+                <span className={`log-dot ${l.action==='Deleted'?'ld-deleted':l.action==='Edited'?'ld-edited':'ld-r_number'}`}>{l.action==='Deleted'?'✕':l.action==='Edited'?'✎':'✓'}</span>
+                <div><div className="log-line"><span className="pnum-sm pnum-r_number">{l.part_number}</span>{l.action}: {l.description}</div><div className="log-meta">{l.engineer_drafter} · {fmt(l.ts)}</div></div>
+              </div>
+            ))}
+            {activityLog.length===0&&records.length===0&&<div className="dim" style={{padding:'12px'}}>No activity yet</div>}
           </div>
         </div>
       </div>
 
-      {showForm==='r_number' && (
+      {showForm==='r_number'&&(
         <Modal title={editTarget?`Edit ${editTarget.part_number}`:'New Rigid Number'} subtitle={editTarget?editTarget.description:`Will be assigned: ${previewNum}`} onClose={closeForm}>
           <div className="form-bod">
-            {!editTarget && <div className="preview-num">{previewNum}</div>}
-            <RForm form={form} errs={errs} editTarget={editTarget} topLevelAssemblies={topLevelAssemblies}
-              isPart={isPart} primaryParent={primaryParent} previewNum={previewNum}
-              suggestNext={suggestNext} onField={onField} onMat={onMat} onParents={onParents} />
+            {!editTarget&&<div className="preview-num">{previewNum}</div>}
+            <RForm form={form} errs={errs} editTarget={editTarget} topLevelAssemblies={topLevelAssemblies} isPart={isPart} primaryParent={primaryParent} previewNum={previewNum} suggestNext={suggestNext} onField={onField} onMat={onMat} onParents={onParents}/>
           </div>
           <div className="modal-ftr">
             <button className="btn-ghost" onClick={closeForm}>Cancel</button>
@@ -541,11 +523,11 @@ export default function App() {
         </Modal>
       )}
 
-      {showForm==='vendor' && (
+      {showForm==='vendor'&&(
         <Modal title={editTarget?`Edit ${editTarget.part_number}`:'New Vendor Part'} subtitle={editTarget?editTarget.description:`Will be assigned: ${previewNum}`} onClose={closeForm}>
           <div className="form-bod">
-            {!editTarget && <div className="preview-num vnum">{previewNum}</div>}
-            <VForm form={form} errs={errs} onField={onField} />
+            {!editTarget&&<div className="preview-num vnum">{previewNum}</div>}
+            <VForm form={form} errs={errs} onField={onField}/>
           </div>
           <div className="modal-ftr">
             <button className="btn-ghost" onClick={closeForm}>Cancel</button>
@@ -554,19 +536,16 @@ export default function App() {
         </Modal>
       )}
 
-      {selected && (
+      {selected&&(
         <Modal title={selected.part_number} subtitle={selected.description} onClose={()=>setSelected(null)}>
           <div className="form-bod">
             <div className="view-top">
               <span className={`pnum-lg pnum-${selected.record_type}`}>{selected.part_number}</span>
-              <div style={{display:'flex',gap:'6px',flexWrap:'wrap',alignItems:'center'}}>
-                <span className={`rtag rtag-${selected.r_class||selected.record_type}`}>{selected.r_class||(selected.record_type==='vendor'?'VENDOR':'R NUMBER')}</span>
-                <span className="pill-open">OPEN</span>
-              </div>
+              <span className={`rtag rtag-${selected.r_class||selected.record_type}`}>{selected.r_class||(selected.record_type==='vendor'?'VENDOR':'R NUMBER')}</span>
             </div>
             <div className="vp-desc">{selected.description}</div>
             <div className="view-grid">
-              {selected.record_type==='r_number' ? <>
+              {selected.record_type==='r_number'?<>
                 <div className="vf"><div className="vk">Material</div><div className="vv">{selected.material||'—'}</div></div>
                 <div className="vf"><div className="vk">Type</div><div className="vv">{selected.part_type||'—'}</div></div>
                 <div className="vf"><div className="vk">Eng Job #</div><div className="vv orange">{selected.eng_job_number||'—'}</div></div>
@@ -575,7 +554,7 @@ export default function App() {
                 <div className="vf"><div className="vk">Parent(s)</div><div className="vv orange">{(selected.parent_assemblies||[]).join(', ')||'Top-level'}</div></div>
                 <div className="vf"><div className="vk">{personRole(selected.engineer_drafter)||'Eng / Drafter'}</div><div className="vv">{selected.engineer_drafter||'—'}</div></div>
                 <div className="vf"><div className="vk">Created</div><div className="vv">{fmt(selected.created_at)}</div></div>
-              </> : <>
+              </>:<>
                 <div className="vf"><div className="vk">Manufacturer</div><div className="vv">{selected.manufacturer||'—'}</div></div>
                 <div className="vf"><div className="vk">Vendor</div><div className="vv">{selected.vendor_name||'—'}</div></div>
                 <div className="vf"><div className="vk">Catalog #</div><div className="vv orange">{selected.catalog_number||'—'}</div></div>
@@ -589,9 +568,7 @@ export default function App() {
                 <div className="sec-label">Child parts / sub-assemblies</div>
                 {rRecords.filter(r=>(r.parent_assemblies||[]).includes(selected.part_number)).map(c=>(
                   <div key={c.id} className="child-row" onClick={()=>setSelected(c)}>
-                    <span className="pnum-sm pnum-r_number">{c.part_number}</span>
-                    <span className="dim">{c.description}</span>
-                    <span className="dim" style={{marginLeft:'auto'}}>{c.material}</span>
+                    <span className="pnum-sm pnum-r_number">{c.part_number}</span><span className="dim">{c.description}</span><span className="dim" style={{marginLeft:'auto'}}>{c.material}</span>
                   </div>
                 ))}
               </div>
@@ -599,10 +576,20 @@ export default function App() {
             {selected.notes&&<div style={{marginTop:'16px'}}><div className="vk">Notes</div><div className="vnotes">{selected.notes}</div></div>}
           </div>
           <div className="modal-ftr">
+            <button className="btn-delete" onClick={()=>{setDeleteTarget(selected)}}>Delete</button>
+            <div style={{flex:1}}/>
             <button className="btn-ghost" onClick={()=>setSelected(null)}>Close</button>
             <button className="btn-new" onClick={()=>openEdit(selected)}>Edit</button>
           </div>
         </Modal>
+      )}
+
+      {deleteTarget&&(
+        <ConfirmModal
+          message={`Delete ${deleteTarget.part_number} — "${deleteTarget.description}"?`}
+          onConfirm={handleDelete}
+          onCancel={()=>setDeleteTarget(null)}
+        />
       )}
 
       {toast&&<div className={`toast ${toast.type==='err'?'toast-err':'toast-ok'}`}>{toast.msg}</div>}
