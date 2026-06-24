@@ -244,15 +244,30 @@ export default function App(){
 
   const notify=(msg,type='ok')=>{setToast({msg,type});setTimeout(()=>setToast(null),3500)}
 
-  const addLog=(action,rec)=>{
-    setActivityLog(prev=>[{id:Date.now(),action,part_number:rec.part_number,description:rec.description,engineer_drafter:rec.engineer_drafter||'System',ts:new Date().toISOString()},...prev].slice(0,50))
-  }
+  const addLog=useCallback(async(action,rec)=>{
+    const entry={action,part_number:rec.part_number,description:rec.description||'',engineer_drafter:rec.engineer_drafter||'System'}
+    // Optimistically update UI
+    setActivityLog(prev=>[{id:Date.now()+'',...entry,ts:new Date().toISOString()},...prev].slice(0,50))
+    // Persist to Supabase (best-effort, don't block)
+    if(!isDemo){
+      try{ await supabase.from('activity_log').insert([entry]) }catch(e){ console.warn('Log write failed',e) }
+    }
+  },[isDemo])
 
   const load=useCallback(async()=>{
     setLoading(true)
     const{data,error}=await supabase.from('parts').select('*').order('part_number',{ascending:true})
-    if(error||!data){setIsDemo(true);setRecords(DEMO);setActivityLog(DEMO.map(r=>({id:r.id+'l',action:'Created',part_number:r.part_number,description:r.description,engineer_drafter:r.engineer_drafter,ts:r.created_at})))}
-    else{setIsDemo(false);setRecords(data)}
+    if(error||!data){
+      setIsDemo(true)
+      setRecords(DEMO)
+      setActivityLog(DEMO.map(r=>({id:r.id+'l',action:'Created',part_number:r.part_number,description:r.description,engineer_drafter:r.engineer_drafter,ts:r.created_at})))
+    } else {
+      setIsDemo(false)
+      setRecords(data)
+      // Load persisted activity log
+      const{data:logData}=await supabase.from('activity_log').select('*').order('created_at',{ascending:false}).limit(50)
+      if(logData) setActivityLog(logData.map(l=>({id:l.id,action:l.action,part_number:l.part_number,description:l.description,engineer_drafter:l.engineer_drafter,ts:l.created_at})))
+    }
     setLoading(false)
   },[])
 
