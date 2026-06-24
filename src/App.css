@@ -172,3 +172,9 @@ select option { background: #1a1a1a; }
 .rtag-Sub-Assembly { background:rgba(234,179,8,0.15); color:#eab308; border:1px solid rgba(234,179,8,0.3); }
 .rtag-Part { background:rgba(59,130,246,0.15); color:#3b82f6; border:1px solid rgba(59,130,246,0.3); }
 .rtag-vendor { background:rgba(168,85,247,0.15); color:#a855f7; border:1px solid rgba(168,85,247,0.3); }
+.btn-delete { background:none; border:1px solid #7f1d1d; color:#ef4444; font-size:12px; padding:7px 16px; border-radius:4px; cursor:pointer; }
+.btn-delete:hover { background:rgba(239,68,68,0.1); }
+.del-btn { border-color:#7f1d1d !important; color:#ef4444 !important; }
+.del-btn:hover { background:rgba(239,68,68,0.1) !important; border-color:#ef4444 !important; }
+.ld-deleted { color:#ef4444; }
+.ld-edited { color:#eab308; }
