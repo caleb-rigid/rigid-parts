@@ -158,3 +158,17 @@ select option { background: #1a1a1a; }
 .multi-opt:hover { background:#222; }
 .multi-opt-sel { background:#1a1000; }
 .tpill { background:#1a1a1a; border:1px solid #2a2a2a; color:#888; font-size:10px; padding:2px 6px; border-radius:3px; font-weight:600; white-space:nowrap; }
+
+.rclass-row { display:flex; gap:8px; }
+.rclass-btn { flex:1; background:#1a1a1a; border:1px solid #2a2a2a; color:#666; font-size:12px; font-weight:600; padding:8px 12px; border-radius:4px; cursor:pointer; letter-spacing:0.05em; transition:all 0.15s; }
+.rclass-btn:hover { border-color:#555; color:#ccc; }
+.rclass-active { background:#1a0a00; border-color:#f97316; color:#f97316; }
+.role-badge { display:inline-block; margin-top:6px; font-size:11px; font-weight:700; letter-spacing:0.1em; padding:3px 10px; border-radius:3px; }
+.role-engineer { background:rgba(59,130,246,0.15); color:#3b82f6; border:1px solid rgba(59,130,246,0.3); }
+.role-drafter { background:rgba(168,85,247,0.15); color:#a855f7; border:1px solid rgba(168,85,247,0.3); }
+.edit-btn { background:none; border:1px solid #2a2a2a; color:#666; font-size:11px; padding:3px 10px; border-radius:3px; cursor:pointer; white-space:nowrap; }
+.edit-btn:hover { border-color:#f97316; color:#f97316; }
+.rtag-Assembly { background:rgba(249,115,22,0.15); color:#f97316; border:1px solid rgba(249,115,22,0.3); }
+.rtag-Sub-Assembly { background:rgba(234,179,8,0.15); color:#eab308; border:1px solid rgba(234,179,8,0.3); }
+.rtag-Part { background:rgba(59,130,246,0.15); color:#3b82f6; border:1px solid rgba(59,130,246,0.3); }
+.rtag-vendor { background:rgba(168,85,247,0.15); color:#a855f7; border:1px solid rgba(168,85,247,0.3); }
