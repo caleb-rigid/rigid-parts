@@ -284,8 +284,8 @@ export default function App() {
       setShowForm(null); setSaving(false); return
     }
 
-    const payload = {...form, material, record_type:showForm, part_number:'',
-      matCat:undefined, matSize:undefined, matSub1:undefined, matSub2:undefined}
+    const { matCat, matSize, matSub1, matSub2, ...formClean } = form
+    const payload = {...formClean, material, record_type:showForm, part_number:''}
     const {data,error} = await supabase.from('parts').insert([payload]).select().single()
     if (error) notify(error.message,'err')
     else { notify(`${data.part_number} created`); setRecords(prev=>[...prev,data].sort((a,b)=>a.part_number.localeCompare(b.part_number))); setShowForm(null) }
