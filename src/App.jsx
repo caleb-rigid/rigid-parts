@@ -283,7 +283,21 @@ export default function App(){
 
   const onField=useCallback((k,v)=>{setForm(f=>({...f,[k]:v}));setErrs(e=>({...e,[k]:undefined}))},[])
   const onMat=useCallback(fields=>setForm(f=>({...f,...fields})),[])
-  const onParents=useCallback(v=>{setForm(f=>({...f,parent_assemblies:v}));setErrs(e=>({...e,parent_assemblies:undefined}))},[])
+  const onParents=useCallback(v=>{
+    // Auto-fill job fields from the first (primary) parent assembly
+    const primaryNum=v[0]
+    const parentRec=primaryNum ? records.find(r=>r.part_number===primaryNum) : null
+    setForm(f=>({
+      ...f,
+      parent_assemblies:v,
+      ...(parentRec && {
+        eng_job_number: parentRec.eng_job_number||f.eng_job_number||'',
+        eng_job_name:   parentRec.eng_job_name||f.eng_job_name||'',
+        fab_job_number: parentRec.fab_job_number||f.fab_job_number||'',
+      })
+    }))
+    setErrs(e=>({...e,parent_assemblies:undefined}))
+  },[records])
 
   const openNew=type=>{setShowForm(type);setEditTarget(null);setErrs({});setForm(type==='r_number'?{...EMPTY_R}:{...EMPTY_V})}
   const openEdit=rec=>{
