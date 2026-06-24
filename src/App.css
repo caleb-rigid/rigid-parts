@@ -148,3 +148,13 @@ body { background: #0d0d0d; color: #c8c8c8; font-family: 'Inter', -apple-system,
 ::-webkit-scrollbar-track { background: #0d0d0d; }
 ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
 select option { background: #1a1a1a; }
+
+.multi-trigger { background:#1a1a1a; border:1px solid #2a2a2a; border-radius:4px; padding:6px 10px; color:#d0d0d0; font-size:13px; }
+.multi-trigger:hover { border-color:#444; }
+.multi-tag { background:rgba(249,115,22,0.15); border:1px solid rgba(249,115,22,0.3); color:#f97316; font-size:11px; padding:2px 7px; border-radius:3px; cursor:pointer; font-family:'Courier New',monospace; }
+.multi-tag:hover { background:rgba(249,115,22,0.25); }
+.multi-drop { position:absolute; top:100%; left:0; right:0; background:#1a1a1a; border:1px solid #333; border-radius:4px; z-index:50; max-height:220px; overflow-y:auto; margin-top:2px; }
+.multi-opt { display:flex; align-items:center; gap:8px; padding:8px 12px; cursor:pointer; border-bottom:1px solid #222; font-size:12px; }
+.multi-opt:hover { background:#222; }
+.multi-opt-sel { background:#1a1000; }
+.tpill { background:#1a1a1a; border:1px solid #2a2a2a; color:#888; font-size:10px; padding:2px 6px; border-radius:3px; font-weight:600; white-space:nowrap; }
