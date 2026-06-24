@@ -146,12 +146,7 @@ function RForm({form,errs,editTarget,topLevelAssemblies,isPart,primaryParent,pre
         <input className={`fi ${errs.description?'fi-err':''}`} type="text" placeholder="e.g. Skid Assembly — Alpine Energy" value={form.description||''} onChange={e=>onField('description',e.target.value)}/>
         {errs.description&&<span className="em">{errs.description}</span>}
       </div>
-      <div className="fg">
-        <label>Type</label>
-        <select className="fi" value={form.part_type||''} onChange={e=>onField('part_type',e.target.value)}>
-          <option value="">Select type…</option>{PART_TYPES.map(t=><option key={t} value={t}>{t}</option>)}
-        </select>
-      </div>
+
       <div className="fg">
         <label>Material</label>
         <MaterialPicker matCat={form.matCat||''} matSize={form.matSize||''} matSub1={form.matSub1||''} matSub2={form.matSub2||''} onChange={onMat}/>
